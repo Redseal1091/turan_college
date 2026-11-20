@@ -1,0 +1,96 @@
+<?php
+
+return [
+    'brand_name' => 'TURAN COLLEGE',
+    'brand_sub' => 'Turan College Almaty',
+    'brand_slogan' => 'For those who believe in themselves and strive for success!',
+    'address_short' => 'Almaty, 16a Satpayev str.',
+    'working_hours_short' => 'Mon-Fri: 09:00 - 18:00',
+    'admissions_phone' => '+7 (727) 260-40-35 (Admissions Office)',
+    'email_main' => 'turan_college@mail.ru',
+    'admin_link' => 'Admin Panel',
+    'apply_now' => 'Apply Now',
+    'apply_online' => 'Apply Online',
+    'select_specialty' => 'Choose Specialty',
+
+    // Menu
+    'nav_home' => 'Home',
+    'nav_about' => 'College',
+    'nav_specialties' => 'Specialties',
+    'nav_admission' => 'Admissions',
+    'nav_student' => 'Students',
+    'nav_career' => 'Career',
+    'nav_news' => 'News',
+    'nav_contacts' => 'Contacts',
+
+    // Accessibility
+    'a11y_btn' => 'Visually Impaired Version',
+    'a11y_title' => 'Accessibility Settings',
+    'a11y_font_size' => 'Font Size',
+    'a11y_theme' => 'Color Scheme',
+    'a11y_theme_normal' => 'Standard',
+    'a11y_theme_contrast' => 'Black & White (High Contrast)',
+    'a11y_theme_dark' => 'Dark Contrast',
+    'a11y_theme_yellow_blue' => 'Yellow on Blue',
+    'a11y_spacing' => 'Letter Spacing',
+    'a11y_spacing_normal' => 'Standard',
+    'a11y_spacing_increased' => 'Increased',
+    'a11y_images' => 'Images',
+    'a11y_images_on' => 'Enabled',
+    'a11y_images_off' => 'Disabled',
+    'a11y_reset' => 'Reset Settings',
+
+    // Hero
+    'hero_badge' => 'Applications for 2026/2027 Academic Year are Open',
+    'hero_title_1' => 'TURAN COLLEGE',
+    'hero_title_2' => 'successful future',
+    'hero_desc' => '23 years of experience, modern methodologies, and practical training for in-demand careers. Combining traditions and innovations to unlock every student\'s potential.',
+    'video_tour_spinning' => 'WATCH VIDEO TOUR • WATCH VIDEO TOUR • ',
+    'video_tour_btn_title' => 'Watch college video tour',
+    'video_tour_modal_title' => 'Virtual 360° Video Tour of Turan College',
+
+    // Stats
+    'stat_employment' => 'Graduate Employment Rate',
+    'stat_graduates' => 'Successful Graduates',
+    'stat_grants' => 'State Grants Annually',
+    'stat_partners' => 'Partner Companies',
+
+    // Express form
+    'lead_badge' => 'Quick Application',
+    'lead_title' => 'Get a Consultation from Admissions',
+    'lead_desc' => 'Leave your contact details and our team will call back within 15 minutes',
+    'lead_name_label' => 'Full Name',
+    'lead_phone_label' => 'Phone Number',
+    'lead_specialty_label' => 'Specialty of Interest',
+    'lead_9_grade' => 'After 9th Grade',
+    'lead_11_grade' => 'After 11th Grade',
+    'lead_submit' => 'Submit Application',
+
+    // Sections
+    'why_us_badge' => 'Why Choose Us',
+    'why_us_title' => 'Advantages of Studying at Turan College',
+    'programs_badge' => 'Academic Programs',
+    'popular_specialties' => 'Popular Specialties',
+    'all_specialties' => 'All Specialties',
+    'news_badge' => 'College Life',
+    'news_title' => 'News & Announcements',
+    'all_news' => 'All News',
+    'read_more' => 'Read More',
+    'partners_badge' => 'Internship Bases & Employers',
+    'partners_title' => 'Companies Where Our Graduates Work',
+    'faq_badge' => 'Q&A',
+    'faq_title' => 'Frequently Asked Questions',
+    'tuition_cost' => 'Tuition:',
+    'grants_label' => 'Grants:',
+    'per_year' => '₸/year',
+    'more_details' => 'Learn More',
+
+    // Footer
+    'footer_desc' => 'Leading innovative college in Almaty at Turan University. State General License No. 14003946. Continuous educational pathway "College – Turan University – Career".',
+    'footer_learning' => 'Education',
+    'footer_college' => 'About Us',
+    'footer_contacts' => 'Contacts',
+    'footer_rights' => 'Turan College. All rights reserved.',
+    'footer_licenses' => 'Licenses & Documents',
+    'footer_admin' => 'Admin Panel Login',
+];
