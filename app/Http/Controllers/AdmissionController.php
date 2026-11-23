@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Application;
 use App\Models\Faq;
+use App\Models\Page;
 use App\Models\Specialty;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ class AdmissionController extends Controller
 {
     public function index(): Response
     {
+        $page = Page::where('slug', 'admission')->first();
+
         $specialties = Specialty::where('is_active', true)
             ->select('id', 'title', 'code', 'base_education')
             ->get();
@@ -24,6 +27,7 @@ class AdmissionController extends Controller
             ->get();
 
         return Inertia::render('Admission/Index', [
+            'page' => $page,
             'specialties' => $specialties,
             'faqs' => $faqs,
         ]);

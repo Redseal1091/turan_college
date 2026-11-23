@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Container from '@/Components/shared/Container.vue';
@@ -33,12 +34,24 @@ interface VacancyItem {
     requirements: string;
 }
 
-defineProps<{
+interface PageData {
+    id: number;
+    slug: string;
+    title: string;
+    featured_image?: string | null;
+    seo_title?: string | null;
+    seo_description?: string | null;
+    content?: Record<string, any> | null;
+    is_active?: boolean;
+}
+
+const props = defineProps<{
+    page?: PageData | null;
     partners: PartnerItem[];
     vacancies: VacancyItem[];
 }>();
 
-const resumeTips = [
+const defaultTips = [
     {
         num: '01',
         title: 'Четкая цель и специализация',
@@ -60,13 +73,25 @@ const resumeTips = [
         desc: 'Грамотность, пунктуальность, умение работать в команде, участие в студенческих клубах и олимпиадах WorldSkills.'
     }
 ];
+
+const resumeTipsList = computed(() => {
+    if (props.page?.content?.resume_guide && Array.isArray(props.page.content.resume_guide) && props.page.content.resume_guide.length > 0) {
+        return props.page.content.resume_guide.map((tip: any, idx: number) => ({
+            num: tip.step_num || `0${idx + 1}`,
+            title: tip.title || defaultTips[idx % defaultTips.length].title,
+            desc: tip.desc || defaultTips[idx % defaultTips.length].desc,
+        }));
+    }
+    return defaultTips;
+});
 </script>
 
 <template>
-    <AppLayout title="Карьера и практика — Колледж Туран">
+    <AppLayout :title="page?.seo_title || page?.title || 'Карьера и практика — Колледж Туран'">
         <!-- Banner with Main Header -->
         <IntroCard
             title="КАРЬЕРА"
+            :bg-image="page?.featured_image ? (page.featured_image.startsWith('images/') ? '/' + page.featured_image : '/storage/' + page.featured_image) : undefined"
             :breadcrumbs="[
                 { label: 'Главная', href: '/' },
                 { label: 'Карьера' },
@@ -78,7 +103,9 @@ const resumeTips = [
             <Container>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-16">
                     <div class="p-6 sm:p-8 rounded-[28px] bg-slate-50 border-0 shadow-none border-t-4 border-t-[#0082C9]">
-                        <div class="font-heading font-extrabold text-3xl text-[#0082C9] mb-2">95%</div>
+                        <div class="font-heading font-extrabold text-3xl text-[#0082C9] mb-2">
+                            {{ page?.content?.metrics?.employment_rate || '95%' }}
+                        </div>
                         <h4 class="font-heading font-bold text-lg text-slate-900 mb-2">Уровень занятости</h4>
                         <p class="text-sm text-slate-600 leading-relaxed">
                             Официальное трудоустройство в партнерских компаниях или продолжение обучения в Университете «Туран» по ускоренной программе.
@@ -86,7 +113,9 @@ const resumeTips = [
                     </div>
 
                     <div class="p-6 sm:p-8 rounded-[28px] bg-slate-50 border-0 shadow-none border-t-4 border-t-[#FDA685]">
-                        <div class="font-heading font-extrabold text-3xl text-[#FDA685] mb-2">150+</div>
+                        <div class="font-heading font-extrabold text-3xl text-[#FDA685] mb-2">
+                            {{ page?.content?.metrics?.partners_count || '150+' }}
+                        </div>
                         <h4 class="font-heading font-bold text-lg text-slate-900 mb-2">Компаний-партнеров</h4>
                         <p class="text-sm text-slate-600 leading-relaxed">
                             Прямые долгосрочные меморандумы с Kaspi Bank, Halyk Bank, Kcell, IT-холдингами, туристическими фирмами и сетями отелей.
@@ -97,8 +126,21 @@ const resumeTips = [
                         <div class="font-heading font-extrabold text-3xl text-[#0082C9] mb-2">Со 2 курса</div>
                         <h4 class="font-heading font-bold text-lg text-slate-900 mb-2">Оплачиваемая практика</h4>
                         <p class="text-sm text-slate-600 leading-relaxed">
-                            Возможность совмещения учебы по индивидуальному графику дуального обучения на реальных рабочих местах.
+                            {{ page?.content?.metrics?.dual_education_text || 'Возможность совмещения учебы по индивидуальному графику дуального обучения на реальных рабочих местах.' }}
                         </p>
+                    </div>
+                </div>
+
+                <!-- Practice Info banner if present -->
+                <div v-if="page?.content?.practice_info" class="p-6 sm:p-8 rounded-[28px] bg-slate-50 border-0 shadow-none mb-16 text-slate-700 text-sm sm:text-base leading-relaxed">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-white text-[#0082C9] border-0 shadow-none flex items-center justify-center shrink-0">
+                            <GraduationCap class="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h3 class="font-heading font-bold text-lg text-slate-900 mb-2">Производственная практика и дуальное обучение</h3>
+                            <p>{{ page.content.practice_info }}</p>
+                        </div>
                     </div>
                 </div>
 
@@ -122,9 +164,9 @@ const resumeTips = [
                             <div class="space-y-2">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <h4 class="font-heading font-bold text-lg text-slate-900">{{ vac.title }}</h4>
-                                    <span class="inline-block px-2.5 py-0.5 rounded-lg bg-white text-[#0082C9] text-xs font-semibold border-0 shadow-none">{{ vac.type }}</span>
+                                    <span class="inline-block px-2.5 py-0.5 rounded-lg bg-white text-[#0082C9] text-sm font-semibold border-0 shadow-none">{{ vac.type }}</span>
                                 </div>
-                                <div class="text-xs sm:text-sm font-semibold text-[#0082C9]">{{ vac.company }}</div>
+                                <div class="text-sm font-semibold text-[#0082C9]">{{ vac.company }}</div>
                                 <p class="text-sm text-slate-600 max-w-2xl leading-relaxed">
                                     Требования: {{ vac.requirements }}
                                 </p>
@@ -158,7 +200,7 @@ const resumeTips = [
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div
-                        v-for="tip in resumeTips"
+                        v-for="tip in resumeTipsList"
                         :key="tip.num"
                         class="p-6 rounded-[24px] bg-slate-50 border-0 shadow-none hover:-translate-y-0.5 transition-transform duration-200"
                     >
@@ -196,7 +238,7 @@ const resumeTips = [
                         class="p-5 rounded-[22px] bg-slate-50 border-0 shadow-none text-center flex flex-col items-center justify-center hover:-translate-y-0.5 transition-transform duration-200"
                     >
                         <div class="font-heading font-bold text-base text-slate-900">{{ p.name }}</div>
-                        <div class="text-xs text-slate-500 mt-1">{{ p.industry }}</div>
+                        <div class="text-sm text-slate-500 mt-1">{{ p.industry }}</div>
                     </div>
                 </div>
             </Container>

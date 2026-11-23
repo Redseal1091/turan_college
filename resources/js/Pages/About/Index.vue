@@ -32,7 +32,19 @@ interface StaffMember {
     photo_url?: string | null;
 }
 
+interface PageData {
+    id: number;
+    slug: string;
+    title: string;
+    featured_image?: string | null;
+    seo_title?: string | null;
+    seo_description?: string | null;
+    content?: Record<string, any> | null;
+    is_active?: boolean;
+}
+
 const props = defineProps<{
+    page?: PageData | null;
     staff: StaffMember[];
 }>();
 
@@ -40,10 +52,71 @@ const props = defineProps<{
 const featuredStaff = computed(() => {
     return props.staff.slice(0, 4);
 });
+
+const defaultPillars = [
+    {
+        title: '1. Инновации',
+        desc: 'Мы активно внедряем цифровые технологии и практико-ориентированный подход в образовательный процесс.',
+        icon: Sparkles,
+        color: 'text-[#0082C9]',
+        spotlight: 'rgba(0, 130, 201, 0.08)',
+    },
+    {
+        title: '2. Партнёрства',
+        desc: 'Колледж сотрудничает с ведущими предприятиями, что обеспечивает нашим студентам прохождение практики и трудоустройство.',
+        icon: Building2,
+        color: 'text-[#0F4C3A]',
+        spotlight: 'rgba(15, 76, 58, 0.08)',
+    },
+    {
+        title: '3. Преподаватели',
+        desc: 'Наши педагоги — это опытные специалисты высшей категории, обладающие глубокими знаниями и практическим опытом.',
+        icon: Users,
+        color: 'text-amber-600',
+        spotlight: 'rgba(245, 158, 11, 0.08)',
+    },
+    {
+        title: '4. Качественное образование',
+        desc: 'Учебные программы соответствуют современным стандартам МОН РК и учитывают актуальные мировые тренды.',
+        icon: Award,
+        color: 'text-indigo-600',
+        spotlight: 'rgba(99, 102, 241, 0.08)',
+    },
+    {
+        title: '5. Студенческая жизнь',
+        desc: 'Мы создаём яркую атмосферу: IT-инкубатор, ENACTUS, дебаты, спортивные секции и творческие площадки.',
+        icon: HeartHandshake,
+        color: 'text-rose-600',
+        spotlight: 'rgba(244, 63, 94, 0.08)',
+    },
+    {
+        title: '6. Инфраструктура в центре',
+        desc: 'г. Алматы, ул. Сатпаева 16а. Просторные аудитории, библиотека, столовая и охраняемое общежитие.',
+        icon: MapPin,
+        color: 'text-teal-600',
+        spotlight: 'rgba(20, 184, 166, 0.08)',
+    },
+];
+
+const pillarsList = computed(() => {
+    if (props.page?.content?.pillars && Array.isArray(props.page.content.pillars) && props.page.content.pillars.length > 0) {
+        return props.page.content.pillars.map((item: any, idx: number) => {
+            const fallback = defaultPillars[idx % defaultPillars.length];
+            return {
+                title: item.title || fallback.title,
+                desc: item.desc || fallback.desc,
+                icon: fallback.icon,
+                color: fallback.color,
+                spotlight: fallback.spotlight,
+            };
+        });
+    }
+    return defaultPillars;
+});
 </script>
 
 <template>
-    <AppLayout title="О нас — Колледж Туран">
+    <AppLayout :title="page?.seo_title || page?.title || 'О нас — Колледж Туран'">
         <!-- Hero / Intro Banner with Main Header -->
         <IntroCard
             title="О КОЛЛЕДЖЕ «ТУРАН»"
@@ -62,20 +135,20 @@ const featuredStaff = computed(() => {
                             Традиции и инновации
                         </div>
                         <h2 class="font-heading font-black text-2xl sm:text-4xl text-slate-900 leading-tight">
-                            Мы объединяем традиции образования с инновационными подходами к обучению
+                            {{ page?.content?.hero?.title || 'Мы объединяем традиции образования с инновационными подходами к обучению' }}
                         </h2>
                         <p class="text-slate-600 text-base leading-relaxed">
-                            Создаем условия для раскрытия потенциала каждого студента. Наш колледж готовит специалистов по 8 ключевым востребованным направлениям цифровой экономики, бизнеса, туризма и юриспруденции.
+                            {{ page?.content?.hero?.subtitle || 'Создаем условия для раскрытия потенциала каждого студента. Наш колледж готовит специалистов по 8 ключевым востребованным направлениям цифровой экономики, бизнеса, туризма и юриспруденции.' }}
                         </p>
 
                         <div class="pt-2 flex flex-wrap gap-4 text-xs sm:text-sm text-slate-700 font-semibold">
                             <div class="flex items-center gap-2">
                                 <CheckCircle class="w-4 h-4 text-[#0082C9]" />
-                                <span>23 года успешной работы</span>
+                                <span>{{ page?.content?.hero?.years || 23 }} года успешной работы</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <CheckCircle class="w-4 h-4 text-[#0082C9]" />
-                                <span>Генеральная лицензия МОН РК № 14003946</span>
+                                <span>Генеральная лицензия МОН РК {{ page?.content?.hero?.license_number || '№ 14003946' }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <CheckCircle class="w-4 h-4 text-[#0082C9]" />
@@ -86,14 +159,14 @@ const featuredStaff = computed(() => {
 
                     <div class="lg:col-span-5 rounded-[28px] overflow-hidden border-0 shadow-none">
                         <img
-                            src="/images/dump/about.jpg"
+                            :src="page?.featured_image ? (page.featured_image.startsWith('images/') ? '/' + page.featured_image : '/storage/' + page.featured_image) : '/images/dump/about.jpg'"
                             alt="Кампус колледжа Туран"
                             class="w-full h-80 object-cover"
                         />
                     </div>
                 </div>
 
-                <!-- 5 Pillars: Why Choose Us -->
+                <!-- 6 Pillars: Why Choose Us -->
                 <div class="mb-12">
                     <h3 class="font-heading font-black text-2xl text-slate-900 mb-8 uppercase text-center sm:text-left">
                         Почему выбирают нас:
@@ -101,80 +174,17 @@ const featuredStaff = computed(() => {
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <SpotlightCard
+                            v-for="(pillar, idx) in pillarsList"
+                            :key="idx"
                             class-name="p-6 sm:p-7 rounded-[26px] bg-slate-50 border-0 shadow-none cursor-default"
-                            spotlight-color="rgba(0, 130, 201, 0.08)"
+                            :spotlight-color="pillar.spotlight"
                         >
-                            <div class="w-10 h-10 rounded-xl bg-white text-[#0082C9] border-0 shadow-none flex items-center justify-center mb-4">
-                                <Sparkles class="w-5 h-5" />
+                            <div :class="['w-10 h-10 rounded-xl bg-white border-0 shadow-none flex items-center justify-center mb-4', pillar.color]">
+                                <component :is="pillar.icon" class="w-5 h-5" />
                             </div>
-                            <h4 class="font-heading font-bold text-lg text-slate-900 mb-2">1. Инновации</h4>
+                            <h4 class="font-heading font-bold text-lg text-slate-900 mb-2">{{ pillar.title }}</h4>
                             <p class="text-sm text-slate-600 leading-relaxed">
-                                Мы активно внедряем цифровые технологии и практико-ориентированный подход в образовательный процесс.
-                            </p>
-                        </SpotlightCard>
-
-                        <SpotlightCard
-                            class-name="p-6 sm:p-7 rounded-[26px] bg-slate-50 border-0 shadow-none cursor-default"
-                            spotlight-color="rgba(15, 76, 58, 0.08)"
-                        >
-                            <div class="w-10 h-10 rounded-xl bg-white text-[#0F4C3A] border-0 shadow-none flex items-center justify-center mb-4">
-                                <Building2 class="w-5 h-5" />
-                            </div>
-                            <h4 class="font-heading font-bold text-lg text-slate-900 mb-2">2. Партнёрства</h4>
-                            <p class="text-sm text-slate-600 leading-relaxed">
-                                Колледж сотрудничает с ведущими предприятиями, что обеспечивает нашим студентам прохождение практики и трудоустройство.
-                            </p>
-                        </SpotlightCard>
-
-                        <SpotlightCard
-                            class-name="p-6 sm:p-7 rounded-[26px] bg-slate-50 border-0 shadow-none cursor-default"
-                            spotlight-color="rgba(245, 158, 11, 0.08)"
-                        >
-                            <div class="w-10 h-10 rounded-xl bg-white text-amber-600 border-0 shadow-none flex items-center justify-center mb-4">
-                                <Users class="w-5 h-5" />
-                            </div>
-                            <h4 class="font-heading font-bold text-lg text-slate-900 mb-2">3. Преподаватели</h4>
-                            <p class="text-sm text-slate-600 leading-relaxed">
-                                Наши педагоги — это опытные специалисты высшей категории, обладающие глубокими знаниями и практическим опытом.
-                            </p>
-                        </SpotlightCard>
-
-                        <SpotlightCard
-                            class-name="p-6 sm:p-7 rounded-[26px] bg-slate-50 border-0 shadow-none cursor-default"
-                            spotlight-color="rgba(99, 102, 241, 0.08)"
-                        >
-                            <div class="w-10 h-10 rounded-xl bg-white text-indigo-600 border-0 shadow-none flex items-center justify-center mb-4">
-                                <Award class="w-5 h-5" />
-                            </div>
-                            <h4 class="font-heading font-bold text-lg text-slate-900 mb-2">4. Качественное образование</h4>
-                            <p class="text-sm text-slate-600 leading-relaxed">
-                                Учебные программы соответствуют современным стандартам МОН РК и учитывают актуальные мировые тренды.
-                            </p>
-                        </SpotlightCard>
-
-                        <SpotlightCard
-                            class-name="p-6 sm:p-7 rounded-[26px] bg-slate-50 border-0 shadow-none cursor-default"
-                            spotlight-color="rgba(244, 63, 94, 0.08)"
-                        >
-                            <div class="w-10 h-10 rounded-xl bg-white text-rose-600 border-0 shadow-none flex items-center justify-center mb-4">
-                                <HeartHandshake class="w-5 h-5" />
-                            </div>
-                            <h4 class="font-heading font-bold text-lg text-slate-900 mb-2">5. Студенческая жизнь</h4>
-                            <p class="text-sm text-slate-600 leading-relaxed">
-                                Мы создаём яркую атмосферу: IT-инкубатор, ENACTUS, дебаты, спортивные секции и творческие площадки.
-                            </p>
-                        </SpotlightCard>
-
-                        <SpotlightCard
-                            class-name="p-6 sm:p-7 rounded-[26px] bg-slate-50 border-0 shadow-none cursor-default"
-                            spotlight-color="rgba(20, 184, 166, 0.08)"
-                        >
-                            <div class="w-10 h-10 rounded-xl bg-white text-teal-600 border-0 shadow-none flex items-center justify-center mb-4">
-                                <MapPin class="w-5 h-5" />
-                            </div>
-                            <h4 class="font-heading font-bold text-lg text-slate-900 mb-2">6. Инфраструктура в центре</h4>
-                            <p class="text-sm text-slate-600 leading-relaxed">
-                                г. Алматы, ул. Сатпаева 16а. Просторные аудитории, библиотека, столовая и охраняемое общежитие.
+                                {{ pillar.desc }}
                             </p>
                         </SpotlightCard>
                     </div>
@@ -192,10 +202,10 @@ const featuredStaff = computed(() => {
                             Команда профессионалов
                         </div>
                         <h2 class="font-heading font-black text-2xl sm:text-4xl text-slate-900 uppercase tracking-tight">
-                            Педагогический состав
+                            {{ page?.content?.leadership_intro?.title || 'Педагогический состав' }}
                         </h2>
                         <p class="text-slate-600 text-base sm:text-lg leading-relaxed">
-                            Руководство, преподаватели-исследователи и эксперты-практики колледжа «Туран»
+                            {{ page?.content?.leadership_intro?.desc || 'Руководство, преподаватели-исследователи и эксперты-практики колледжа «Туран»' }}
                         </p>
                     </div>
                 </div>

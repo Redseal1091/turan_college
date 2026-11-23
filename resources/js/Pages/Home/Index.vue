@@ -83,7 +83,19 @@ interface FaqItem {
     category: string;
 }
 
+interface PageData {
+    id: number;
+    slug: string;
+    title: string;
+    featured_image?: string | null;
+    seo_title?: string | null;
+    seo_description?: string | null;
+    content?: Record<string, any> | null;
+    is_active?: boolean;
+}
+
 const props = defineProps<{
+    page?: PageData | null;
     featuredSpecialties: Specialty[];
     latestNews: NewsItem[];
     partners: PartnerItem[];
@@ -126,6 +138,58 @@ const videoTourModalTitle = computed(() => {
         return t('video_tour_modal_title', 'Virtual 360° Video Tour of Turan College');
     }
     return t('video_tour_modal_title', 'Виртуальный 360° видеотур по Колледжу «Туран»');
+});
+
+const heroYears = computed(() => {
+    return Number(props.page?.content?.hero?.countup_years) || 23;
+});
+
+const heroSubtitleParts = computed(() => {
+    const defaultText = 'Это {years} года опыта, современные подходы и реальная подготовка к востребованным профессиям. Объединяем традиции и инновации, чтобы каждый студент раскрыл свой потенциал.';
+    const text = props.page?.content?.hero?.subtitle || defaultText;
+
+    // 1. Explicit placeholder {years} or {count}
+    if (text.includes('{years}') || text.includes('{count}')) {
+        const placeholder = text.includes('{years}') ? '{years}' : '{count}';
+        const [before, ...afterParts] = text.split(placeholder);
+        return {
+            hasCountUp: true,
+            before,
+            after: afterParts.join(placeholder),
+            years: heroYears.value,
+        };
+    }
+
+    // 2. Check if the text contains the specific countup_years number (e.g. "25" or "23")
+    const yearsStr = String(heroYears.value);
+    const indexSpecific = text.indexOf(yearsStr);
+    if (indexSpecific !== -1) {
+        return {
+            hasCountUp: true,
+            before: text.slice(0, indexSpecific),
+            after: text.slice(indexSpecific + yearsStr.length),
+            years: heroYears.value,
+        };
+    }
+
+    // 3. Fallback regex: find the first number in the text
+    const match = text.match(/\b\d+\b/);
+    if (match && match.index !== undefined) {
+        return {
+            hasCountUp: true,
+            before: text.slice(0, match.index),
+            after: text.slice(match.index + match[0].length),
+            years: heroYears.value,
+        };
+    }
+
+    // 4. Plain text without any number
+    return {
+        hasCountUp: false,
+        before: text,
+        after: '',
+        years: heroYears.value,
+    };
 });
 
 const formatNewsDate = (dateStr?: string) => {
@@ -557,21 +621,28 @@ const specialtyIcons = [
 </script>
 
 <template>
-    <AppLayout title="TURAN COLLEGE — Главная">
+    <AppLayout :title="page?.seo_title || page?.title || 'TURAN COLLEGE — Главная'">
         <!-- =================================================================
              1. HERO / INTRO SECTION (Main Header sits on intro background)
              ================================================================= -->
-        <IntroCard variant="home">
+        <IntroCard
+            variant="home"
+            :bg-image="page?.featured_image ? (page.featured_image.startsWith('images/') ? '/' + page.featured_image : '/storage/' + page.featured_image) : '/images/Intro_back.jpg'"
+        >
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center pt-4 sm:pt-4 pb-2">
                 <!-- Left Hero Content with comfortable top offset on mobile -->
                 <div class="lg:col-span-8 space-y-4 sm:space-y-7 pt-2 sm:pt-0">
                     <h1 class="font-heading font-black text-2xl sm:text-5xl lg:text-7xl tracking-tight leading-none uppercase text-white">
-                        TURAN COLLEGE
+                        {{ page?.content?.hero?.title || 'TURAN COLLEGE' }}
                     </h1>
 
                     <p class="text-slate-200 text-sm sm:text-lg lg:text-xl font-normal max-w-3xl leading-relaxed">
-                        Это <CountUp :to="23" :duration="2" class="font-bold text-white inline-block" /> года опыта, современные подходы и реальная подготовка к востребованным профессиям. 
-                        Объединяем традиции и инновации, чтобы каждый студент раскрыл свой потенциал.
+                        <template v-if="heroSubtitleParts.hasCountUp">
+                            {{ heroSubtitleParts.before }}<CountUp :to="heroSubtitleParts.years" :duration="2" class="font-bold text-white inline-block" />{{ heroSubtitleParts.after }}
+                        </template>
+                        <template v-else>
+                            {{ heroSubtitleParts.before }}
+                        </template>
                     </p>
 
                     <!-- Action Buttons with Vue Bits Specular Button -->
@@ -581,7 +652,7 @@ const specialtyIcons = [
                             @click="openApplyModal()"
                             class-name="h-11 sm:h-12 px-6 sm:px-8 text-xs sm:text-sm"
                         >
-                            <span>КАК ПОСТУПИТЬ?</span>
+                            <span>{{ page?.content?.hero?.cta_primary || 'КАК ПОСТУПИТЬ?' }}</span>
                             <ArrowRight class="w-4 h-4 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1" />
                         </SpecularButton>
 
@@ -590,7 +661,7 @@ const specialtyIcons = [
                             href="/specialties"
                             class-name="h-11 sm:h-12 px-6 sm:px-8 text-xs sm:text-sm"
                         >
-                            <span>СТОИМОСТЬ ОБУЧЕНИЯ</span>
+                            <span>{{ page?.content?.hero?.cta_secondary || 'СТОИМОСТЬ ОБУЧЕНИЯ' }}</span>
                             <ArrowRight class="w-4 h-4 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1" />
                         </SpecularButton>
                     </div>
@@ -755,10 +826,10 @@ const specialtyIcons = [
                     <div class="lg:col-span-7 space-y-4 sm:space-y-8">
                         <div class="space-y-3 sm:space-y-5">
                             <h2 class="font-heading font-black text-xl sm:text-3xl lg:text-[54px] text-slate-900 uppercase tracking-tight leading-none">
-                                ПРО КОЛЛЕДЖ
+                                {{ page?.content?.about_preview?.title || 'ПРО КОЛЛЕДЖ' }}
                             </h2>
                             <p class="font-sans font-normal text-sm sm:text-lg lg:text-[24px] text-slate-700 leading-snug sm:leading-relaxed max-w-2xl">
-                                Колледж сотрудничает с ведущими предприятиями, что обеспечивает нашим студентам возможность прохождения практики и дальнейшего трудоустройства
+                                {{ page?.content?.about_preview?.description || 'Колледж сотрудничает с ведущими предприятиями, что обеспечивает нашим студентам возможность прохождения практики и дальнейшего трудоустройства' }}
                             </p>
                         </div>
 
@@ -787,7 +858,7 @@ const specialtyIcons = [
                                     </svg>
                                 </div>
                                 <span class="font-heading font-medium text-[11px] sm:text-sm lg:text-[15px] text-slate-800 leading-tight block group-hover:text-slate-900 text-center">
-                                    Педагогический<br>состав
+                                    {{ page?.content?.about_preview?.feature_cards?.[0]?.title || 'Педагогический состав' }}
                                 </span>
                             </Link>
 
@@ -804,7 +875,7 @@ const specialtyIcons = [
                                     </svg>
                                 </div>
                                 <span class="font-heading font-medium text-[11px] sm:text-sm lg:text-[15px] text-slate-800 leading-tight block text-center">
-                                    Качественное<br>образование
+                                    {{ page?.content?.about_preview?.feature_cards?.[1]?.title || 'Качественное образование' }}
                                 </span>
                             </div>
 
@@ -821,7 +892,7 @@ const specialtyIcons = [
                                     </svg>
                                 </div>
                                 <span class="font-heading font-medium text-[11px] sm:text-sm lg:text-[15px] text-slate-800 leading-tight block text-center">
-                                    Сотрудничество
+                                    {{ page?.content?.about_preview?.feature_cards?.[2]?.title || 'Сотрудничество' }}
                                 </span>
                             </div>
                         </div>
@@ -1066,7 +1137,7 @@ const specialtyIcons = [
             <Container>
                 <div class="rounded-2xl py-4 sm:py-8 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
                     <h3 class="font-heading font-black text-lg sm:text-2xl lg:text-3xl text-slate-900 tracking-tight text-center sm:text-left">
-                        Подай заявку на поступление онлайн
+                        {{ page?.content?.cta_banner?.title || 'Подай заявку на поступление онлайн' }}
                     </h3>
 
                     <button
@@ -1074,7 +1145,7 @@ const specialtyIcons = [
                         @click="openApplyModal()"
                         class="px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#0082C9] hover:bg-[#0070ad] text-white font-heading font-semibold text-[13px] sm:text-[14px] leading-tight tracking-wide transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer shrink-0 hover:scale-105 active:scale-95 inline-flex items-center gap-2.5 group"
                     >
-                        <span>Отправить заявку</span>
+                        <span>{{ page?.content?.cta_banner?.button_text || 'Отправить заявку' }}</span>
                         <ArrowRight class="w-4 h-4 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1" />
                     </button>
                 </div>
@@ -1094,7 +1165,7 @@ const specialtyIcons = [
                 <div class="relative aspect-video bg-black flex items-center justify-center">
                     <iframe
                         class="w-full h-full"
-                        src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=0"
+                        :src="page?.content?.hero?.tour_video_url || 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=0'"
                         :title="videoTourModalTitle"
                         frameborder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Page;
 use App\Models\Partner;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -10,6 +11,7 @@ class CareerController extends Controller
 {
     public function __invoke(): Response
     {
+        $page = Page::where('slug', 'career')->first();
         $partners = Partner::orderBy('sort_order')->get();
 
         $vacancies = [
@@ -37,6 +39,7 @@ class CareerController extends Controller
         ];
 
         return Inertia::render('Career/Index', [
+            'page' => $page,
             'partners' => $partners,
             'vacancies' => $vacancies,
         ]);

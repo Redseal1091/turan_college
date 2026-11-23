@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Page;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,17 +12,22 @@ class ContactController extends Controller
 {
     public function index(): Response
     {
-        return Inertia::render('Contacts/Index', [
-            'contacts' => [
-                'address' => 'Республика Казахстан, г. Алматы, ул. Сатпаева 16а',
-                'phones' => [
-                    ['label' => 'Приемная комиссия', 'number' => '+7 (727) 260-40-35'],
-                    ['label' => 'Учебная часть', 'number' => '+7 (727) 260-40-30'],
-                    ['label' => 'Горячая линия / WhatsApp', 'number' => '+7 (778) 555-53-65'],
-                ],
-                'email' => 'turan_college@mail.ru',
-                'working_hours' => 'Понедельник — Пятница: 09:00 — 18:00',
+        $page = Page::where('slug', 'contacts')->first();
+
+        $defaultContacts = [
+            'address' => 'Республика Казахстан, г. Алматы, ул. Сатпаева 16а',
+            'phones' => [
+                ['label' => 'Приемная комиссия', 'number' => '+7 (727) 260-40-35'],
+                ['label' => 'Учебная часть', 'number' => '+7 (727) 260-40-30'],
+                ['label' => 'Горячая линия / WhatsApp', 'number' => '+7 (778) 555-53-65'],
             ],
+            'email' => 'turan_college@mail.ru',
+            'working_hours' => 'Понедельник — Пятница: 09:00 — 18:00',
+        ];
+
+        return Inertia::render('Contacts/Index', [
+            'page' => $page,
+            'contacts' => $page?->content ?? $defaultContacts,
         ]);
     }
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Container from '@/Components/shared/Container.vue';
 import IntroCard from '@/Components/layout/IntroCard.vue';
@@ -30,18 +31,61 @@ interface ClubItem {
     desc: string;
 }
 
-defineProps<{
+interface PageData {
+    id: number;
+    slug: string;
+    title: string;
+    featured_image?: string | null;
+    seo_title?: string | null;
+    seo_description?: string | null;
+    content?: Record<string, any> | null;
+    is_active?: boolean;
+}
+
+const props = defineProps<{
+    page?: PageData | null;
     scheduleNotice: string;
     callSchedule: CallItem[];
     clubs: ClubItem[];
 }>();
+
+const callScheduleList = computed(() => {
+    if (props.page?.content?.call_schedule && Array.isArray(props.page.content.call_schedule) && props.page.content.call_schedule.length > 0) {
+        return props.page.content.call_schedule.map((c: any) => ({
+            pair: c.pair || '',
+            time: c.time || (c.time_start && c.time_end ? `${c.time_start} – ${c.time_end}` : (c.time_start || '')),
+        }));
+    }
+    return props.callSchedule;
+});
+
+const defaultDownloads = [
+    { year: '1 курс', info: 'Все специальности', file_url: '' },
+    { year: '2 курс', info: 'Все специальности', file_url: '' },
+    { year: '3 курс', info: 'Все специальности', file_url: '' },
+];
+
+const scheduleDownloadsList = computed(() => {
+    if (props.page?.content?.schedule_downloads && Array.isArray(props.page.content.schedule_downloads) && props.page.content.schedule_downloads.length > 0) {
+        return props.page.content.schedule_downloads;
+    }
+    return defaultDownloads;
+});
+
+const clubsList = computed(() => {
+    if (props.page?.content?.student_clubs && Array.isArray(props.page.content.student_clubs) && props.page.content.student_clubs.length > 0) {
+        return props.page.content.student_clubs;
+    }
+    return props.clubs;
+});
 </script>
 
 <template>
-    <AppLayout title="Студенту — Колледж Туран">
+    <AppLayout :title="page?.seo_title || page?.title || 'Студенту — Колледж Туран'">
         <!-- Banner with Main Header -->
         <IntroCard
             title="СТУДЕНТУ"
+            :bg-image="page?.featured_image ? (page.featured_image.startsWith('images/') ? '/' + page.featured_image : '/storage/' + page.featured_image) : undefined"
             :breadcrumbs="[
                 { label: 'Главная', href: '/' },
                 { label: 'Студенту' },
@@ -61,13 +105,13 @@ defineProps<{
                                 </div>
                                 <div>
                                     <h3 class="font-heading font-bold text-xl text-slate-900">Расписание звонков</h3>
-                                    <p class="text-xs text-slate-500">Учебный год 2026/2027</p>
+                                    <p class="text-sm text-slate-500">Учебный год 2026/2027</p>
                                 </div>
                             </div>
 
                             <div class="space-y-2.5">
                                 <div
-                                    v-for="(item, idx) in callSchedule"
+                                    v-for="(item, idx) in callScheduleList"
                                     :key="idx"
                                     :class="[
                                         'p-3.5 rounded-2xl flex items-center justify-between text-sm border-0 shadow-none',
@@ -77,7 +121,7 @@ defineProps<{
                                     ]"
                                 >
                                     <span>{{ item.pair }}</span>
-                                    <span class="font-mono font-bold text-xs">{{ item.time }}</span>
+                                    <span class="font-mono font-bold text-sm">{{ item.time }}</span>
                                 </div>
                             </div>
                         </div>
@@ -92,7 +136,7 @@ defineProps<{
                                 </div>
                                 <div>
                                     <h3 class="font-heading font-bold text-xl text-slate-900">Расписание занятий по курсам</h3>
-                                    <p class="text-xs text-slate-500">Обновлено на весенний семестр</p>
+                                    <p class="text-sm text-slate-500">Обновлено на весенний семестр</p>
                                 </div>
                             </div>
 
@@ -101,29 +145,29 @@ defineProps<{
                             </p>
 
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                <div class="p-4 rounded-2xl bg-white border-0 shadow-none text-center transition-colors">
-                                    <div class="font-heading font-bold text-slate-800 mb-1">1 курс</div>
-                                    <span class="text-xs text-slate-500 block mb-3">Все специальности</span>
-                                    <Button size="sm" variant="outline" class="w-full text-xs gap-1 rounded-xl bg-slate-50 hover:bg-[#0082C9] hover:text-white border-0 shadow-none">
-                                        <Download class="w-3.5 h-3.5" />
+                                <div
+                                    v-for="(dl, idx) in scheduleDownloadsList"
+                                    :key="idx"
+                                    class="p-4 rounded-2xl bg-white border-0 shadow-none text-center transition-colors"
+                                >
+                                    <div class="font-heading font-bold text-slate-800 mb-1">{{ dl.year }}</div>
+                                    <span class="text-sm text-slate-500 block mb-3">{{ dl.info }}</span>
+                                    <a
+                                        v-if="dl.file_url"
+                                        :href="dl.file_url"
+                                        target="_blank"
+                                        class="inline-flex items-center justify-center w-full py-2 px-3 text-sm gap-1.5 rounded-xl bg-slate-50 hover:bg-[#0082C9] hover:text-white transition-colors text-slate-700 font-medium"
+                                    >
+                                        <Download class="w-4 h-4" />
                                         Скачать PDF
-                                    </Button>
-                                </div>
-
-                                <div class="p-4 rounded-2xl bg-white border-0 shadow-none text-center transition-colors">
-                                    <div class="font-heading font-bold text-slate-800 mb-1">2 курс</div>
-                                    <span class="text-xs text-slate-500 block mb-3">Все специальности</span>
-                                    <Button size="sm" variant="outline" class="w-full text-xs gap-1 rounded-xl bg-slate-50 hover:bg-[#0082C9] hover:text-white border-0 shadow-none">
-                                        <Download class="w-3.5 h-3.5" />
-                                        Скачать PDF
-                                    </Button>
-                                </div>
-
-                                <div class="p-4 rounded-2xl bg-white border-0 shadow-none text-center transition-colors">
-                                    <div class="font-heading font-bold text-slate-800 mb-1">3 курс</div>
-                                    <span class="text-xs text-slate-500 block mb-3">Все специальности</span>
-                                    <Button size="sm" variant="outline" class="w-full text-xs gap-1 rounded-xl bg-slate-50 hover:bg-[#0082C9] hover:text-white border-0 shadow-none">
-                                        <Download class="w-3.5 h-3.5" />
+                                    </a>
+                                    <Button
+                                        v-else
+                                        size="sm"
+                                        variant="outline"
+                                        class="w-full text-sm gap-1.5 rounded-xl bg-slate-50 hover:bg-[#0082C9] hover:text-white border-0 shadow-none"
+                                    >
+                                        <Download class="w-4 h-4" />
                                         Скачать PDF
                                     </Button>
                                 </div>
@@ -175,13 +219,15 @@ defineProps<{
                             <div class="w-12 h-12 rounded-2xl bg-white text-rose-600 border-0 shadow-none flex items-center justify-center mb-5">
                                 <HeartPulse class="w-6 h-6" />
                             </div>
-                            <h3 class="font-heading font-bold text-xl text-slate-900 mb-3">Медицинский пункт</h3>
+                            <h3 class="font-heading font-bold text-xl text-slate-900 mb-3">
+                                {{ page?.content?.infrastructure?.medical?.title || 'Медицинский пункт' }}
+                            </h3>
                             <p class="text-sm text-slate-600 leading-relaxed mb-4">
-                                Оказание первичной медико-санитарной и доврачебной помощи. Плановые медицинские осмотры, вакцинация и контроль санитарно-эпидемиологического режима.
+                                {{ page?.content?.infrastructure?.medical?.desc || 'Оказание первичной медико-санитарной и доврачебной помощи. Плановые медицинские осмотры, вакцинация и контроль санитарно-эпидемиологического режима.' }}
                             </p>
                         </div>
-                        <div class="pt-4 border-t border-slate-200/50 text-xs text-slate-500 font-medium">
-                            Режим работы: Пн – Пт, 08:30 – 17:00 (ул. Сатпаева 16а)
+                        <div class="pt-4 border-t border-slate-200/50 text-sm text-slate-500 font-medium">
+                            {{ page?.content?.infrastructure?.medical?.hours || 'Режим работы: Пн – Пт, 08:30 – 17:00 (ул. Сатпаева 16а)' }}
                         </div>
                     </div>
 
@@ -190,13 +236,15 @@ defineProps<{
                             <div class="w-12 h-12 rounded-2xl bg-white text-amber-600 border-0 shadow-none flex items-center justify-center mb-5">
                                 <Utensils class="w-6 h-6" />
                             </div>
-                            <h3 class="font-heading font-bold text-xl text-slate-900 mb-3">Пункт питания (Столовая)</h3>
+                            <h3 class="font-heading font-bold text-xl text-slate-900 mb-3">
+                                {{ page?.content?.infrastructure?.cafeteria?.title || 'Пункт питания (Столовая)' }}
+                            </h3>
                             <p class="text-sm text-slate-600 leading-relaxed mb-4">
-                                Собственная светлая столовая и буфет на территории колледжа. Сбалансированное горячее питание, свежая выпечка и напитки. Строгий контроль качества блюд.
+                                {{ page?.content?.infrastructure?.cafeteria?.desc || 'Собственная светлая столовая и буфет на территории колледжа. Сбалансированное горячее питание, свежая выпечка и напитки. Строгий контроль качества блюд.' }}
                             </p>
                         </div>
-                        <div class="pt-4 border-t border-slate-200/50 text-xs text-slate-500 font-medium">
-                            Режим работы: Пн – Сб, 08:00 – 16:30
+                        <div class="pt-4 border-t border-slate-200/50 text-sm text-slate-500 font-medium">
+                            {{ page?.content?.infrastructure?.cafeteria?.hours || 'Режим работы: Пн – Сб, 08:00 – 16:30' }}
                         </div>
                     </div>
 
@@ -205,13 +253,15 @@ defineProps<{
                             <div class="w-12 h-12 rounded-2xl bg-white text-[#0082C9] border-0 shadow-none flex items-center justify-center mb-5">
                                 <Library class="w-6 h-6" />
                             </div>
-                            <h3 class="font-heading font-bold text-xl text-slate-900 mb-3">Библиотечный комплекс</h3>
+                            <h3 class="font-heading font-bold text-xl text-slate-900 mb-3">
+                                {{ page?.content?.infrastructure?.library?.title || 'Библиотечный комплекс' }}
+                            </h3>
                             <p class="text-sm text-slate-600 leading-relaxed mb-4">
-                                Богатый фонд учебной, научной и периодической литературы. Читальный зал с доступом к электронным базам данных, методическим пособиям и Wi-Fi.
+                                {{ page?.content?.infrastructure?.library?.desc || 'Богатый фонд учебной, научной и периодической литературы. Читальный зал с доступом к электронным базам данных, методическим пособиям и Wi-Fi.' }}
                             </p>
                         </div>
-                        <div class="pt-4 border-t border-slate-200/50 text-xs text-slate-500 font-medium">
-                            Доступ к электронным ресурсам 24/7
+                        <div class="pt-4 border-t border-slate-200/50 text-sm text-slate-500 font-medium">
+                            {{ page?.content?.infrastructure?.library?.hours || 'Доступ к электронным ресурсам 24/7' }}
                         </div>
                     </div>
                 </div>
@@ -233,7 +283,7 @@ defineProps<{
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div
-                        v-for="(club, idx) in clubs"
+                        v-for="(club, idx) in clubsList"
                         :key="idx"
                         class="p-6 rounded-[24px] bg-slate-50 border-0 shadow-none hover:-translate-y-1 transition-transform duration-200"
                     >

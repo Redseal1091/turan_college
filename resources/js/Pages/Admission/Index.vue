@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Container from '@/Components/shared/Container.vue';
@@ -31,10 +31,93 @@ interface FaqItem {
     answer: string;
 }
 
+interface PageData {
+    id: number;
+    slug: string;
+    title: string;
+    featured_image?: string | null;
+    seo_title?: string | null;
+    seo_description?: string | null;
+    content?: Record<string, any> | null;
+    is_active?: boolean;
+}
+
 const props = defineProps<{
+    page?: PageData | null;
     specialties: Specialty[];
     faqs?: FaqItem[];
 }>();
+
+const defaultSteps = [
+    {
+        step_num: 1,
+        title: 'Выбор специальности',
+        desc: 'Выберите направление из актуальных программ обучения на базе 9 или 11 классов.',
+        badgeColor: 'bg-[#0082C9] text-white',
+    },
+    {
+        step_num: 2,
+        title: 'Подача заявления',
+        desc: 'Заполните онлайн-заявку на сайте или посетите приемную комиссию лично (ул. Сатпаева 16а).',
+        badgeColor: 'bg-[#FDA685] text-slate-900',
+    },
+    {
+        step_num: 3,
+        title: 'Пакет документов',
+        desc: 'Предоставьте подлинник аттестата, медсправку 075-У, 4 фото 3х4 и удостоверение личности.',
+        badgeColor: 'bg-[#0F4C3A] text-white',
+    },
+    {
+        step_num: 4,
+        title: 'Зачисление',
+        desc: 'Конкурс грантов или заключение договора и торжественное получение студенческого билета!',
+        badgeColor: 'bg-emerald-600 text-white',
+    },
+];
+
+const stepsList = computed(() => {
+    if (props.page?.content?.steps && Array.isArray(props.page.content.steps) && props.page.content.steps.length > 0) {
+        return props.page.content.steps.map((s: any, idx: number) => {
+            const fallback = defaultSteps[idx % defaultSteps.length];
+            return {
+                step_num: s.step_num || idx + 1,
+                title: s.title || fallback.title,
+                desc: s.desc || fallback.desc,
+                badgeColor: fallback.badgeColor,
+            };
+        });
+    }
+    return defaultSteps;
+});
+
+const defaultDocuments = [
+    'Документ (подлинник и копия) об окончании 9 или 11 класса (аттестат с приложением).',
+    'Медицинская справка по форме № 075-У со снимком флюорографии (для инвалидов I и II группы — заключение МСЭ).',
+    '4 фотографии размером 3х4 см.',
+    'Копия свидетельства о рождении или удостоверения личности абитуриента с ИИН.',
+    'Копия удостоверения личности одного из родителей (для несовершеннолетних).',
+];
+
+const requiredDocumentsList = computed(() => {
+    if (props.page?.content?.required_documents && Array.isArray(props.page.content.required_documents) && props.page.content.required_documents.length > 0) {
+        return props.page.content.required_documents.map((d: any) => typeof d === 'string' ? d : (d.item || d.name || ''));
+    }
+    return defaultDocuments;
+});
+
+const defaultDormFeatures = [
+    'Круглосуточное видеонаблюдение и пропускная система безопасности',
+    'Оборудованные кухни на каждом этаже, прачечная и сушильные комнаты',
+    'Высокоскоростной Wi-Fi на всей территории кампуса',
+    'Шаговая доступность (5 минут) до учебных корпусов колледжа',
+];
+
+const dormitoryFeatures = computed(() => {
+    if (props.page?.content?.dormitory?.features && Array.isArray(props.page.content.dormitory.features) && props.page.content.dormitory.features.length > 0) {
+        return props.page.content.dormitory.features.map((f: any) => typeof f === 'string' ? f : (f.feature || f.name || ''));
+    }
+    return defaultDormFeatures;
+});
 
 const form = useForm({
     applicant_name: '',
@@ -73,10 +156,11 @@ const submit = () => {
 </script>
 
 <template>
-    <AppLayout title="Абитуриенту — Колледж Туран">
+    <AppLayout :title="page?.seo_title || page?.title || 'Абитуриенту — Колледж Туран'">
         <!-- Hero / Intro Banner with Main Header -->
         <IntroCard
             title="АБИТУРИЕНТУ"
+            :bg-image="page?.featured_image ? (page.featured_image.startsWith('images/') ? '/' + page.featured_image : '/storage/' + page.featured_image) : undefined"
             :breadcrumbs="[
                 { label: 'Главная', href: '/' },
                 { label: 'Абитуриенту' },
@@ -92,8 +176,8 @@ const submit = () => {
                             <Calendar class="w-6 h-6 sm:w-7 sm:h-7" />
                         </div>
                         <div>
-                            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-white text-[#0F4C3A] text-xs font-bold uppercase tracking-wider mb-1 border-0 shadow-none">
-                                2026–2027 учебный год
+                            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-white text-[#0F4C3A] text-sm font-bold uppercase tracking-wider mb-1 border-0 shadow-none">
+                                {{ page?.content?.deadlines?.note || '2026–2027 учебный год' }}
                             </div>
                             <h3 class="font-heading font-black text-lg sm:text-xl lg:text-2xl text-slate-900 uppercase tracking-tight leading-tight">
                                 Сроки приёма документов
@@ -105,15 +189,15 @@ const submit = () => {
                         <div class="p-4 rounded-2xl bg-white border-0 shadow-none flex items-center gap-3">
                             <div class="w-3 h-3 rounded-full bg-emerald-500 shrink-0"></div>
                             <div>
-                                <span class="text-xs text-slate-500 block leading-tight">Дневное отделение</span>
-                                <span class="font-heading font-bold text-sm sm:text-base text-[#0F4C3A]">с 25 июня по 27 августа</span>
+                                <span class="text-sm text-slate-500 block leading-tight">Дневное отделение</span>
+                                <span class="font-heading font-bold text-sm sm:text-base text-[#0F4C3A]">{{ page?.content?.deadlines?.daytime_dates || 'с 25 июня по 27 августа' }}</span>
                             </div>
                         </div>
                         <div class="p-4 rounded-2xl bg-white border-0 shadow-none flex items-center gap-3">
                             <div class="w-3 h-3 rounded-full bg-[#0082C9] shrink-0"></div>
                             <div>
-                                <span class="text-xs text-slate-500 block leading-tight">Заочное отделение</span>
-                                <span class="font-heading font-bold text-sm sm:text-base text-[#0082C9]">с 25 июня по 20 сентября</span>
+                                <span class="text-sm text-slate-500 block leading-tight">Заочное отделение</span>
+                                <span class="font-heading font-bold text-sm sm:text-base text-[#0082C9]">{{ page?.content?.deadlines?.extramural_dates || 'с 25 июня по 20 сентября' }}</span>
                             </div>
                         </div>
                     </div>
@@ -134,43 +218,17 @@ const submit = () => {
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    <div class="p-6 sm:p-7 rounded-[24px] bg-slate-50 border-0 shadow-none text-center">
-                        <div class="w-11 h-11 rounded-2xl bg-[#0082C9] text-white font-heading font-black text-lg flex items-center justify-center mx-auto mb-4 border-0 shadow-none">
-                            1
+                    <div
+                        v-for="step in stepsList"
+                        :key="step.step_num"
+                        class="p-6 sm:p-7 rounded-[24px] bg-slate-50 border-0 shadow-none text-center"
+                    >
+                        <div :class="['w-11 h-11 rounded-2xl font-heading font-black text-lg flex items-center justify-center mx-auto mb-4 border-0 shadow-none', step.badgeColor]">
+                            {{ step.step_num }}
                         </div>
-                        <h4 class="font-heading font-bold text-base sm:text-lg text-slate-900 mb-2">Выбор специальности</h4>
-                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                            Выберите направление из актуальных программ обучения на базе 9 или 11 классов.
-                        </p>
-                    </div>
-
-                    <div class="p-6 sm:p-7 rounded-[24px] bg-slate-50 border-0 shadow-none text-center">
-                        <div class="w-11 h-11 rounded-2xl bg-[#FDA685] text-slate-900 font-heading font-black text-lg flex items-center justify-center mx-auto mb-4 border-0 shadow-none">
-                            2
-                        </div>
-                        <h4 class="font-heading font-bold text-base sm:text-lg text-slate-900 mb-2">Подача заявления</h4>
-                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                            Заполните онлайн-заявку на сайте или посетите приемную комиссию лично (ул. Сатпаева 16а).
-                        </p>
-                    </div>
-
-                    <div class="p-6 sm:p-7 rounded-[24px] bg-slate-50 border-0 shadow-none text-center">
-                        <div class="w-11 h-11 rounded-2xl bg-[#0F4C3A] text-white font-heading font-black text-lg flex items-center justify-center mx-auto mb-4 border-0 shadow-none">
-                            3
-                        </div>
-                        <h4 class="font-heading font-bold text-base sm:text-lg text-slate-900 mb-2">Пакет документов</h4>
-                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                            Предоставьте подлинник аттестата, медсправку 075-У, 4 фото 3х4 и удостоверение личности.
-                        </p>
-                    </div>
-
-                    <div class="p-6 sm:p-7 rounded-[24px] bg-slate-50 border-0 shadow-none text-center">
-                        <div class="w-11 h-11 rounded-2xl bg-emerald-600 text-white font-heading font-black text-lg flex items-center justify-center mx-auto mb-4 border-0 shadow-none">
-                            4
-                        </div>
-                        <h4 class="font-heading font-bold text-base sm:text-lg text-slate-900 mb-2">Зачисление</h4>
-                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                            Конкурс грантов или заключение договора и торжественное получение студенческого билета!
+                        <h4 class="font-heading font-bold text-base sm:text-lg text-slate-900 mb-2">{{ step.title }}</h4>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            {{ step.desc }}
                         </p>
                     </div>
                 </div>
@@ -191,30 +249,18 @@ const submit = () => {
                                 <h3 class="font-heading font-black text-lg sm:text-xl text-slate-900 uppercase">
                                     Необходимые документы
                                 </h3>
-                                <p class="text-xs text-slate-500">Официальный перечень колледжа «Туран»</p>
+                                <p class="text-sm text-slate-500">Официальный перечень колледжа «Туран»</p>
                             </div>
                         </div>
 
-                        <ul class="space-y-3 text-xs sm:text-sm text-slate-700">
-                            <li class="flex items-start gap-3">
+                        <ul class="space-y-3 text-sm text-slate-700">
+                            <li
+                                v-for="(doc, idx) in requiredDocumentsList"
+                                :key="idx"
+                                class="flex items-start gap-3"
+                            >
                                 <CheckCircle class="w-5 h-5 text-[#0082C9] shrink-0 mt-0.5" />
-                                <span>Документ (подлинник и копия) об окончании 9 или 11 класса (аттестат с приложением).</span>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <CheckCircle class="w-5 h-5 text-[#0082C9] shrink-0 mt-0.5" />
-                                <span>Медицинская справка по форме № 075-У со снимком флюорографии (для инвалидов I и II группы — заключение МСЭ).</span>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <CheckCircle class="w-5 h-5 text-[#0082C9] shrink-0 mt-0.5" />
-                                <span>4 фотографии размером 3х4 см.</span>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <CheckCircle class="w-5 h-5 text-[#0082C9] shrink-0 mt-0.5" />
-                                <span>Копия свидетельства о рождении или удостоверения личности абитуриента с ИИН.</span>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <CheckCircle class="w-5 h-5 text-[#0082C9] shrink-0 mt-0.5" />
-                                <span>Копия удостоверения личности одного из родителей (для несовершеннолетних).</span>
+                                <span>{{ doc }}</span>
                             </li>
                         </ul>
                     </div>
@@ -227,30 +273,30 @@ const submit = () => {
                             </div>
                             <div>
                                 <h3 class="font-heading font-black text-lg sm:text-xl text-slate-900 uppercase">
-                                    Студенческое общежитие и гранты
+                                    {{ page?.content?.dormitory?.title || 'Студенческое общежитие и гранты' }}
                                 </h3>
-                                <p class="text-xs text-slate-500">Условия проживания и государственная поддержка</p>
+                                <p class="text-sm text-slate-500">{{ page?.content?.dormitory?.badge || 'Условия проживания и государственная поддержка' }}</p>
                             </div>
                         </div>
 
-                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                            Колледж располагает собственным комфортабельным общежитием в шаговой доступности. Круглосуточная охрана, Wi-Fi, кухни и комнаты самоподготовки.
+                        <p class="text-sm text-slate-600 leading-relaxed mb-4">
+                            {{ page?.content?.dormitory?.desc || 'Колледж располагает собственным комфортабельным общежитием в шаговой доступности. Круглосуточная охрана, Wi-Fi, кухни и комнаты самоподготовки.' }}
                         </p>
 
-                        <div class="space-y-2.5 text-xs sm:text-sm">
-                            <div class="p-3.5 rounded-2xl bg-white border-0 shadow-none flex items-center justify-between">
-                                <span class="font-medium text-slate-800">Государственные образовательные гранты</span>
-                                <span class="font-bold text-emerald-700">Ежегодно</span>
-                            </div>
-                            <div class="p-3.5 rounded-2xl bg-white border-0 shadow-none flex items-center justify-between">
-                                <span class="font-medium text-slate-800">Льготное поступление в Университет «Туран»</span>
-                                <span class="font-bold text-[#0082C9]">Гарантия</span>
-                            </div>
-                            <div class="p-3.5 rounded-2xl bg-white border-0 shadow-none flex items-center justify-between">
-                                <span class="font-medium text-slate-800">Помесячная оплата обучения</span>
-                                <span class="font-bold text-slate-700">Гибкий график</span>
-                            </div>
+                        <div v-if="page?.content?.tuition_grants" class="p-3.5 mb-4 rounded-2xl bg-white border-0 shadow-none text-sm text-slate-700 leading-relaxed">
+                            {{ page.content.tuition_grants }}
                         </div>
+
+                        <ul class="space-y-2 text-sm text-slate-700">
+                            <li
+                                v-for="(feat, idx) in dormitoryFeatures"
+                                :key="idx"
+                                class="flex items-start gap-2.5 p-2 rounded-xl bg-white"
+                            >
+                                <CheckCircle class="w-4 h-4 text-[#0F4C3A] shrink-0 mt-0.5" />
+                                <span>{{ feat }}</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </Container>

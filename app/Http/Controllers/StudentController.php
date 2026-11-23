@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Page;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -9,7 +10,10 @@ class StudentController extends Controller
 {
     public function __invoke(): Response
     {
+        $page = Page::where('slug', 'student')->first();
+
         return Inertia::render('Student/Index', [
+            'page' => $page,
             'scheduleNotice' => 'Расписание занятий на текущий семестр актуально на 2026/2027 учебный год.',
             'callSchedule' => [
                 ['pair' => '1 пара', 'time' => '08:30 – 09:50'],

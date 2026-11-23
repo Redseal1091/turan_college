@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Faq;
 use App\Models\News;
+use App\Models\Page;
 use App\Models\Partner;
 use App\Models\Specialty;
 use Inertia\Inertia;
@@ -13,6 +14,8 @@ class HomeController extends Controller
 {
     public function __invoke(): Response
     {
+        $page = Page::where('slug', 'home')->first();
+
         $featuredSpecialties = Specialty::where('is_active', true)
             ->orderBy('sort_order')
             ->get();
@@ -26,6 +29,7 @@ class HomeController extends Controller
         $faqs = Faq::orderBy('sort_order')->take(6)->get();
 
         return Inertia::render('Home/Index', [
+            'page' => $page,
             'featuredSpecialties' => $featuredSpecialties,
             'latestNews' => $latestNews,
             'partners' => $partners,
